@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacBridgeDroid macOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --accent-primary: #007aff;
+            --accent-secondary: #00d2ff;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0ab;
+            --success: #34c759;
+            --warning: #ffb000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(0, 122, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.05) 0%, transparent 50%);
+        }
+
+        .app-window {
+            width: 1000px;
+            height: 680px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid var(--glass-border);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 122, 255, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 50px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .header-section {
+            margin-bottom: 40px;
+        }
+
+        .header-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, #a0a0ab 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Mode Toggle */
+        .mode-wrapper {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 14px;
+            display: inline-flex;
+            margin-bottom: 30px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .device-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .device-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .device-image {
+            width: 80px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .wireless-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--accent-primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border: 2px solid var(--bg-color);
+        }
+
+        .device-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-icon {
+            font-size: 1.8rem;
+        }
+
+        .action-btn h4 {
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .action-btn p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 1px solid var(--glass-border);
+            display: none;
+        }
+
+        .guide-step {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .step-num {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .pairing-code-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed var(--accent-primary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .pairing-digit {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 0.5rem;
+            color: var(--accent-secondary);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #006ae6;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-window">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg width="20" height="24" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 14C4 14 2 14 2 12C2 10 4 6 10 6C16 6 18 10 18 12C18 14 16 14 16 14" stroke="white"
+                            stroke-width="2" stroke-linecap="round" />
+                        <path d="M10 2V6" stroke="white" stroke-width="2" stroke-linecap="round" />
+                        <path d="M6 3L8 6" stroke="white" stroke-width="2" stroke-linecap="round" />
+                        <path d="M14 3L12 6" stroke="white" stroke-width="2" stroke-linecap="round" />
+                        <circle cx="7" cy="11" r="1.5" fill="white" />
+                        <circle cx="13" cy="11" r="1.5" fill="white" />
+                        <path d="M7 16H13V18C13 19.6569 11.6569 21 10 21C8.34315 21 7 19.6569 7 18V16Z" fill="white" />
+                    </svg>
+                </div>
+                <span class="logo-text">MacBridgeDroid</span>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active">
+                    <span class="nav-icon">📱</span>
+                    <span>Devices</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📂</span>
+                    <span>File Browser</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">⚡</span>
+                    <span>Mirroring</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="dashboard">
+                <div class="header-section">
+                    <h1 class="header-title" id="welcome-text">Welcome to MacBridgeDroid</h1>
+                    <p class="header-subtitle" id="subtitle-text">Choose your connection mode below.</p>
+                </div>
+
+                <!-- Mode Toggle -->
+                <div class="mode-wrapper">
+                    <div class="mode-btn active" id="btn-usb" onclick="setMode('usb')">USB Cable</div>
+                    <div class="mode-btn" id="btn-wireless" onclick="setMode('wireless')">Wireless Debug</div>
+                </div>
+
+                <!-- Device Card -->
+                <div class="device-card">
+                    <div class="device-image">
+                        <div class="wireless-icon" id="wifi-indicator">📶</div>
+                        <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="2" width="36" height="56" rx="6" stroke="white" stroke-width="2"
+                                stroke-opacity="0.3" />
+                            <rect x="16" y="52" width="8" height="1.5" rx="0.75" fill="white" fill-opacity="0.3" />
+                        </svg>
+                    </div>
+                    <div class="device-info">
+                        <h3 id="device-name">No Device Detected</h3>
+                        <p id="device-meta">Awaiting connection...</p>
+                        <div class="status-badge" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30;"
+                            id="status-badge">
+                            <div class="pulse" id="pulse-dot" style="background: #ff3b30;"></div>
+                            <span id="status-text">Disconnected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-grid" id="main-actions">
+                    <div class="action-btn" onclick="showPanel('guide')">
+                        <span class="action-icon">📖</span>
+                        <h4>Setup Guide</h4>
+                        <p>Detailed instructions for your connection mode.</p>
+                    </div>
+                    <div class="action-btn" id="pair-btn" style="display: none;" onclick="showPanel('pair')">
+                        <span class="action-icon">🔑</span>
+                        <h4>Pair New Device</h4>
+                        <p>Initialize wireless ADB pairing with a code.</p>
+                    </div>
+                    <div class="action-btn" onclick="testConnection()">
+                        <span class="action-icon">🚀</span>
+                        <h4>Quick Diagnostic</h4>
+                        <p>Scan local network and ports for devices.</p>
+                    </div>
+                </div>
+
+                <!-- USB Guide Panel -->
+                <div id="usb-guide" class="panel">
+                    <h3 style="margin-bottom: 20px;">USB Connection Guide</h3>
+                    <div class="guide-step">
+                        <div class="step-num">1</div>
+                        <p>Connect phone via USB-C data cable.</p>
+                    </div>
+                    <div class="guide-step">
+                        <div class="step-num">2</div>
+                        <p>Tap "Build Number" 7 times in <b>About Phone</b>.</p>
+                    </div>
+                    <div class="guide-step">
+                        <div class="step-num">3</div>
+                        <p>Enable <b>USB Debugging</b> in Developer Options.</p>
+                    </div>
+                    <button class="btn-primary" onclick="completeConnection('USB')">Finish Setup</button>
+                </div>
+
+                <!-- Wireless Pairing Panel -->
+                <div id="wireless-panel" class="panel">
+                    <h3 style="margin-bottom: 20px;">Wireless Pairing</h3>
+                    <div class="guide-step">
+                        <div class="step-num">1</div>
+                        <p>Connect phone to the same Wi-Fi as this Mac.</p>
+                    </div>
+                    <div class="guide-step">
+                        <div class="step-num">2</div>
+                        <p>Go to <b>Wireless Debugging > Pair device with pairing code</b>.</p>
+                    </div>
+                    <div class="pairing-code-box">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">ENTER THIS CODE
+                            ON YOUR PHONE</p>
+                        <span class="pairing-digit">842 195</span>
+                    </div>
+                    <button class="btn-primary" onclick="completeConnection('Wireless')">Waiting for phone...</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentMode = 'usb';
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-usb').classList.toggle('active', mode === 'usb');
+            document.getElementById('btn-wireless').classList.toggle('active', mode === 'wireless');
+            document.getElementById('wifi-indicator').style.display = mode === 'wireless' ? 'flex' : 'none';
+            document.getElementById('pair-btn').style.display = mode === 'wireless' ? 'flex' : 'none';
+
+            // Reset state
+            hideAllPanels();
+            document.getElementById('device-name').innerText = 'No Device Detected';
+            document.getElementById('status-text').innerText = 'Disconnected';
+            document.getElementById('status-badge').style.color = '#ff3b30';
+            document.getElementById('status-badge').style.background = 'rgba(255, 59, 48, 0.1)';
+            document.getElementById('pulse-dot').style.background = '#ff3b30';
+        }
+
+        function hideAllPanels() {
+            document.getElementById('usb-guide').style.display = 'none';
+            document.getElementById('wireless-panel').style.display = 'none';
+        }
+
+        function showPanel(type) {
+            hideAllPanels();
+            if (type === 'guide') {
+                if (currentMode === 'usb') document.getElementById('usb-guide').style.display = 'block';
+                else document.getElementById('wireless-panel').style.display = 'block';
+            } else if (type === 'pair') {
+                document.getElementById('wireless-panel').style.display = 'block';
+            }
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function testConnection() {
+            const btn = event.currentTarget;
+            btn.style.opacity = '0.7';
+            btn.querySelector('p').innerText = currentMode === 'usb' ? 'Scanning USB hubs...' : 'Scanning local network...';
+
+            setTimeout(() => {
+                btn.style.opacity = '1';
+                btn.querySelector('p').innerText = 'No compatible device found.';
+            }, 1500);
+        }
+
+        function completeConnection(type) {
+            const badge = document.getElementById('status-badge');
+            const name = document.getElementById('device-name');
+            const meta = document.getElementById('device-meta');
+            const pulse = document.getElementById('pulse-dot');
+
+            name.innerText = 'Detecting...';
+            badge.style.background = 'rgba(0, 122, 255, 0.1)';
+            badge.style.color = '#007aff';
+            pulse.style.background = '#007aff';
+            document.getElementById('status-text').innerText = 'Initializing...';
+
+            setTimeout(() => {
+                name.innerText = type === 'Wireless' ? 'Pixel 8 (Wireless)' : 'Samsung Galaxy S23';
+                meta.innerText = type === 'Wireless' ? 'IP: 192.168.1.45 | Signal: Strong' : 'High-Speed USB-C Connection';
+                badge.style.background = 'rgba(52, 199, 89, 0.1)';
+                badge.style.color = '#34c759';
+                pulse.style.background = '#34c759';
+                document.getElementById('status-text').innerText = 'Connected';
+                hideAllPanels();
+
+                // Wow animation
+                document.querySelector('.device-card').style.transform = 'scale(1.05)';
+                setTimeout(() => document.querySelector('.device-card').style.transform = 'scale(1)', 400);
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>
