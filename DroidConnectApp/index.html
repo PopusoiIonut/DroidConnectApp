@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MacBridgeDroid macOS</title>
+    <title>DroidConnect macOS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -66,6 +66,7 @@
             display: flex;
             flex-direction: column;
             gap: 30px;
+            -webkit-app-region: drag;
         }
 
         .logo-section {
@@ -73,6 +74,7 @@
             align-items: center;
             gap: 12px;
             padding: 0 10px;
+            -webkit-app-region: no-drag;
         }
 
         .logo-icon {
@@ -110,6 +112,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
             font-size: 0.95rem;
+            -webkit-app-region: no-drag;
         }
 
         .nav-item:hover {
@@ -369,34 +372,31 @@
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-icon">
-                    <svg width="20" height="24" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 14C4 14 2 14 2 12C2 10 4 6 10 6C16 6 18 10 18 12C18 14 16 14 16 14" stroke="white"
-                            stroke-width="2" stroke-linecap="round" />
-                        <path d="M10 2V6" stroke="white" stroke-width="2" stroke-linecap="round" />
-                        <path d="M6 3L8 6" stroke="white" stroke-width="2" stroke-linecap="round" />
-                        <path d="M14 3L12 6" stroke="white" stroke-width="2" stroke-linecap="round" />
-                        <circle cx="7" cy="11" r="1.5" fill="white" />
-                        <circle cx="13" cy="11" r="1.5" fill="white" />
-                        <path d="M7 16H13V18C13 19.6569 11.6569 21 10 21C8.34315 21 7 19.6569 7 18V16Z" fill="white" />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 17H7C4.23858 17 2 14.7614 2 12C2 9.23858 4.23858 7 7 7H9" stroke="white"
+                            stroke-width="2.5" stroke-linecap="round" />
+                        <path d="M15 7H17C19.7614 7 22 9.23858 22 12C22 14.7614 19.7614 17 17 17H15" stroke="white"
+                            stroke-width="2.5" stroke-linecap="round" />
+                        <path d="M8 12H16" stroke="white" stroke-width="2.5" stroke-linecap="round" />
                     </svg>
                 </div>
-                <span class="logo-text">MacBridgeDroid</span>
+                <span class="logo-text">DroidConnect</span>
             </div>
 
             <nav class="nav-menu">
-                <div class="nav-item active">
+                <div class="nav-item active" id="nav-devices" onclick="switchTab('dashboard')">
                     <span class="nav-icon">📱</span>
                     <span>Devices</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" id="nav-files" onclick="switchTab('file-browser')">
                     <span class="nav-icon">📂</span>
                     <span>File Browser</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" id="nav-mirror" onclick="switchTab('mirroring')">
                     <span class="nav-icon">⚡</span>
                     <span>Mirroring</span>
                 </div>
-                <div class="nav-item">
+                <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">
                     <span class="nav-icon">⚙️</span>
                     <span>Settings</span>
                 </div>
@@ -407,7 +407,7 @@
         <main class="main-content">
             <div id="dashboard">
                 <div class="header-section">
-                    <h1 class="header-title" id="welcome-text">Welcome to MacBridgeDroid</h1>
+                    <h1 class="header-title" id="welcome-text">Welcome to DroidConnect</h1>
                     <p class="header-subtitle" id="subtitle-text">Choose your connection mode below.</p>
                 </div>
 
@@ -433,7 +433,7 @@
                         <div class="status-badge" style="background: rgba(255, 59, 48, 0.1); color: #ff3b30;"
                             id="status-badge">
                             <div class="pulse" id="pulse-dot" style="background: #ff3b30;"></div>
-                            <span id="status-text">Disconnected</span>
+                            <span id="status-text">Disconnected (Awaiting Device)</span>
                         </div>
                     </div>
                 </div>
@@ -493,6 +493,76 @@
                     <button class="btn-primary" onclick="completeConnection('Wireless')">Waiting for phone...</button>
                 </div>
             </div>
+
+            <!-- File Browser Panel -->
+            <div id="file-browser" class="panel">
+                <div class="header-section">
+                    <h1 class="header-title">File Browser</h1>
+                    <p class="header-subtitle">Access and manage files on your handset.</p>
+                </div>
+                <div id="file-browser-offline"
+                    style="margin-top: 30px; opacity: 0.8; text-align: center; padding: 60px; background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px dashed rgba(255,59,48,0.4);">
+                    <span style="font-size: 4rem;">🚫📱</span>
+                    <h3 style="margin-top: 20px; color: #ff3b30;">No Device Connected</h3>
+                    <p style="margin-top: 10px; font-weight: 500; color: var(--text-secondary);">Please connect an
+                        Android handset via USB or Wireless ADB to browse its file system.</p>
+                    <button class="btn-primary" style="margin-top: 25px;"
+                        onclick="triggerNativeAlert('device_required_files')">How to Connect?</button>
+                </div>
+                <!-- Hidden file structure (shows when connected) -->
+                <div id="file-browser-online" style="display: none; margin-top: 20px;">
+                    <p style="color: var(--success); font-weight: bold;">Device connected. Loading internal storage...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Mirroring Panel -->
+            <div id="mirroring" class="panel">
+                <div class="header-section">
+                    <h1 class="header-title">Screen Mirroring</h1>
+                    <p class="header-subtitle">Stream your device screen to this Mac.</p>
+                </div>
+                <div id="mirror-offline"
+                    style="margin-top: 30px; background: rgba(0,0,0,0.3); border-radius: 20px; height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed rgba(255,59,48,0.4); text-align: center;">
+                    <span style="font-size: 3rem;">🖥️ ❌ 📱</span>
+                    <h3 style="margin-top: 15px; color: #ff3b30; font-size: 1.2rem;">Cannot Start Mirroring</h3>
+                    <p style="color: var(--text-secondary); margin-top: 5px; font-weight: 500;">A physical device must
+                        be connected first.</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn-primary" id="start-mirror-btn"
+                        onclick="triggerNativeAlert('device_required_mirror')"
+                        style="opacity: 0.5; background: #333;">Start Mirroring Session</button>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div id="settings" class="panel">
+                <div class="header-section">
+                    <h1 class="header-title">Settings</h1>
+                    <p class="header-subtitle">Configure DroidConnect preferences.</p>
+                </div>
+                <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 16px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid var(--glass-border);">
+                        <div>
+                            <p style="font-weight: 600;">Auto-connect on USB</p>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);">Initialize ADB automatically
+                            </p>
+                        </div>
+                        <input type="checkbox" checked
+                            style="width: 20px; height: 20px; accent-color: var(--accent-primary);">
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid var(--glass-border);">
+                        <div>
+                            <p style="font-weight: 600;">High Bitrate Stream</p>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);">Best quality for mirroring</p>
+                        </div>
+                        <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--accent-primary);">
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -531,6 +601,34 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
+        function switchTab(tabId) {
+            // Hide all major sections
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('file-browser').style.display = 'none';
+            document.getElementById('mirroring').style.display = 'none';
+            document.getElementById('settings').style.display = 'none';
+
+            // Show selected
+            const target = tabId === 'dashboard' ? 'dashboard' : tabId;
+            document.getElementById(target).style.display = 'block';
+
+            // Update nav-item active states
+            const navItems = ['nav-devices', 'nav-files', 'nav-mirror', 'nav-settings'];
+            const map = {
+                'dashboard': 'nav-devices',
+                'file-browser': 'nav-files',
+                'mirroring': 'nav-mirror',
+                'settings': 'nav-settings'
+            };
+
+            navItems.forEach(item => {
+                document.getElementById(item).classList.toggle('active', item === map[tabId]);
+            });
+
+            // Close specific action guides if switching tabs
+            hideAllPanels();
+        }
+
         function testConnection() {
             const btn = event.currentTarget;
             btn.style.opacity = '0.7';
@@ -561,12 +659,42 @@
                 badge.style.color = '#34c759';
                 pulse.style.background = '#34c759';
                 document.getElementById('status-text').innerText = 'Connected';
+
+                // Update specific panels for online state
+                document.getElementById('file-browser-offline').style.display = 'none';
+                document.getElementById('file-browser-online').style.display = 'block';
+
+                document.getElementById('mirror-offline').innerHTML = '<span style="font-size: 3rem; color: var(--success);">📱 ✅</span><h3 style="margin-top: 15px; color: var(--success);">Ready to Mirror</h3><p style="color: var(--text-secondary);">Device is connected and ready for ADB stream.</p>';
+                document.getElementById('mirror-offline').style.borderColor = 'rgba(52, 199, 89, 0.4)';
+
+                const mirrorBtn = document.getElementById('start-mirror-btn');
+                mirrorBtn.style.opacity = '1';
+                mirrorBtn.style.background = 'var(--accent-primary)';
+                mirrorBtn.onclick = () => { triggerNativeAlert('start_mirroring'); };
+                mirrorBtn.innerText = 'Launch Screen Stream';
+
                 hideAllPanels();
 
                 // Wow animation
                 document.querySelector('.device-card').style.transform = 'scale(1.05)';
                 setTimeout(() => document.querySelector('.device-card').style.transform = 'scale(1)', 400);
             }, 2000);
+        }
+
+        // Bridge to Native SwiftUI
+        function triggerNativeAlert(actionId) {
+            // Check if WebKit message handlers are available (they will be when injected from Swift)
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeAppBridge) {
+                window.webkit.messageHandlers.nativeAppBridge.postMessage(actionId);
+            } else {
+                // Fallback for development/testing in standard browser
+                if (actionId === 'device_required_files' || actionId === 'device_required_mirror') {
+                    alert('DroidConnect Error: No Android device detected. Please connect a device via USB or Pair Wirelessly first.');
+                    switchTab('dashboard'); // Route back to dashboard
+                } else if (actionId === 'start_mirroring') {
+                    alert('Attempting to launch scrcpy stream...');
+                }
+            }
         }
     </script>
 </body>

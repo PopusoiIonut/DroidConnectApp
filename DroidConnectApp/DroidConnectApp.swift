@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct DroidConnectApp: App {
+struct DroidConnectMain: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

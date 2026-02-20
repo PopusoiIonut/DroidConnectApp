@@ -1,13 +1,46 @@
 import SwiftUI
 import WebKit
 
+class Coordinator: NSObject, WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "nativeAppBridge", let msgString = message.body as? String {
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                if msgString == "device_required_files" || msgString == "device_required_mirror" {
+                    alert.messageText = "Device Required"
+                    alert.informativeText = "Please connect an Android handset via USB or Wireless ADB to use this feature."
+                    alert.alertStyle = .warning
+                } else if msgString == "start_mirroring" {
+                    alert.messageText = "Initializing Screen Stream"
+                    alert.informativeText = "Preparing ADB and launching scrcpy..."
+                    alert.alertStyle = .informational
+                } else {
+                    alert.messageText = "Action Received"
+                    alert.informativeText = "ID: \(msgString)"
+                    alert.alertStyle = .informational
+                }
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+        }
+    }
+}
+
 struct WebView: NSViewRepresentable {
     let url: URL
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
 
     func makeNSView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
         configuration.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
+        
+        let userContentController = WKUserContentController()
+        userContentController.add(context.coordinator, name: "nativeAppBridge")
+        configuration.userContentController = userContentController
         
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.layer?.backgroundColor = NSColor.clear.cgColor
@@ -16,7 +49,6 @@ struct WebView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
-        // Robust way to load local bundle files in a sandboxed environment
         nsView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
 }
@@ -52,5 +84,14 @@ struct VisualEffectView: NSViewRepresentable {
         return view
     }
 
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        DispatchQueue.main.async {
+            if let window = nsView.window {
+                window.isMovableByWindowBackground = true
+                window.titlebarAppearsTransparent = true
+                window.titleVisibility = .hidden
+                window.minSize = NSSize(width: 800, height: 600)
+            }
+        }
+    }
 }
