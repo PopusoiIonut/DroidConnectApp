@@ -632,68 +632,73 @@
         function testConnection() {
             const btn = event.currentTarget;
             btn.style.opacity = '0.7';
-            btn.querySelector('p').innerText = currentMode === 'usb' ? 'Scanning USB hubs...' : 'Scanning local network...';
-
-            setTimeout(() => {
-                btn.style.opacity = '1';
-                btn.querySelector('p').innerText = 'No compatible device found.';
-            }, 1500);
+            btn.querySelector('p').innerText = 'Scanning for real devices...';
+            
+            triggerNativeCall('scan_devices');
         }
 
-        function completeConnection(type) {
+        // Called from Native Swift
+        window.updateDevices = function(deviceList) {
+            const dashboardBtn = document.querySelector('.action-btn:nth-child(3)');
+            dashboardBtn.style.opacity = '1';
+            
+            if (deviceList.length === 0) {
+                dashboardBtn.querySelector('p').innerText = 'No devices found.';
+                setDisconnectedState();
+            } else {
+                dashboardBtn.querySelector('p').innerText = `Success: ${deviceList.length} device(s) found.`;
+                completeConnection(deviceList[0]);
+            }
+        };
+
+        function setDisconnectedState() {
+            document.getElementById('device-name').innerText = 'No Device Detected';
+            document.getElementById('status-text').innerText = 'Disconnected';
+            const badge = document.getElementById('status-badge');
+            badge.style.color = '#ff3b30';
+            badge.style.background = 'rgba(255, 59, 48, 0.1)';
+            document.getElementById('pulse-dot').style.background = '#ff3b30';
+        }
+
+        function completeConnection(deviceId) {
             const badge = document.getElementById('status-badge');
             const name = document.getElementById('device-name');
             const meta = document.getElementById('device-meta');
             const pulse = document.getElementById('pulse-dot');
 
-            name.innerText = 'Detecting...';
-            badge.style.background = 'rgba(0, 122, 255, 0.1)';
-            badge.style.color = '#007aff';
-            pulse.style.background = '#007aff';
-            document.getElementById('status-text').innerText = 'Initializing...';
+            name.innerText = deviceId;
+            meta.innerText = 'Real-time ADB Connection Active';
+            badge.style.background = 'rgba(52, 199, 89, 0.1)';
+            badge.style.color = '#34c759';
+            pulse.style.background = '#34c759';
+            document.getElementById('status-text').innerText = 'Connected';
 
-            setTimeout(() => {
-                name.innerText = type === 'Wireless' ? 'Pixel 8 (Wireless)' : 'Samsung Galaxy S23';
-                meta.innerText = type === 'Wireless' ? 'IP: 192.168.1.45 | Signal: Strong' : 'High-Speed USB-C Connection';
-                badge.style.background = 'rgba(52, 199, 89, 0.1)';
-                badge.style.color = '#34c759';
-                pulse.style.background = '#34c759';
-                document.getElementById('status-text').innerText = 'Connected';
+            // Update specific panels for online state
+            document.getElementById('file-browser-offline').style.display = 'none';
+            document.getElementById('file-browser-online').style.display = 'block';
 
-                // Update specific panels for online state
-                document.getElementById('file-browser-offline').style.display = 'none';
-                document.getElementById('file-browser-online').style.display = 'block';
+            document.getElementById('mirror-offline').innerHTML = '<span style="font-size: 3rem; color: var(--success);">📱 ✅</span><h3 style="margin-top: 15px; color: var(--success);">Ready to Mirror</h3><p style="color: var(--text-secondary);">Device is connected and ready for ADB stream.</p>';
+            document.getElementById('mirror-offline').style.borderColor = 'rgba(52, 199, 89, 0.4)';
 
-                document.getElementById('mirror-offline').innerHTML = '<span style="font-size: 3rem; color: var(--success);">📱 ✅</span><h3 style="margin-top: 15px; color: var(--success);">Ready to Mirror</h3><p style="color: var(--text-secondary);">Device is connected and ready for ADB stream.</p>';
-                document.getElementById('mirror-offline').style.borderColor = 'rgba(52, 199, 89, 0.4)';
+            const mirrorBtn = document.getElementById('start-mirror-btn');
+            mirrorBtn.style.opacity = '1';
+            mirrorBtn.style.background = 'var(--accent-primary)';
+            mirrorBtn.onclick = () => { triggerNativeCall('start_mirroring'); };
+            mirrorBtn.innerText = 'Launch Screen Stream';
 
-                const mirrorBtn = document.getElementById('start-mirror-btn');
-                mirrorBtn.style.opacity = '1';
-                mirrorBtn.style.background = 'var(--accent-primary)';
-                mirrorBtn.onclick = () => { triggerNativeAlert('start_mirroring'); };
-                mirrorBtn.innerText = 'Launch Screen Stream';
+            hideAllPanels();
 
-                hideAllPanels();
-
-                // Wow animation
-                document.querySelector('.device-card').style.transform = 'scale(1.05)';
-                setTimeout(() => document.querySelector('.device-card').style.transform = 'scale(1)', 400);
-            }, 2000);
+            // Wow animation
+            document.querySelector('.device-card').style.transform = 'scale(1.05)';
+            setTimeout(() => document.querySelector('.device-card').style.transform = 'scale(1)', 400);
         }
 
         // Bridge to Native SwiftUI
-        function triggerNativeAlert(actionId) {
-            // Check if WebKit message handlers are available (they will be when injected from Swift)
+        function triggerNativeCall(actionId) {
             if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.nativeAppBridge) {
                 window.webkit.messageHandlers.nativeAppBridge.postMessage(actionId);
             } else {
-                // Fallback for development/testing in standard browser
-                if (actionId === 'device_required_files' || actionId === 'device_required_mirror') {
-                    alert('DroidConnect Error: No Android device detected. Please connect a device via USB or Pair Wirelessly first.');
-                    switchTab('dashboard'); // Route back to dashboard
-                } else if (actionId === 'start_mirroring') {
-                    alert('Attempting to launch scrcpy stream...');
-                }
+                console.log("Native bridge not found. Action:", actionId);
             }
         }
     </script>

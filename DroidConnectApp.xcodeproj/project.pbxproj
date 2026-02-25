@@ -11,15 +11,19 @@
 		CE09164E2F31E39100B1AB02 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE09164D2F31E39100B1AB02 /* ContentView.swift */; };
 		CE0916502F31E39100B1AB02 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE09164F2F31E39100B1AB02 /* Assets.xcassets */; };
 		CE0916522F31E39100B1AB02 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = CE0916512F31E39100B1AB02 /* index.html */; };
+		CE0916802F31E39200B1AB02 /* adb in Resources */ = {isa = PBXBuildFile; fileRef = CE0916812F31E39200B1AB02 /* adb */; };
+		CE0916842F31E39200B1AB02 /* scrcpy in Resources */ = {isa = PBXBuildFile; fileRef = CE0916852F31E39200B1AB02 /* scrcpy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CE0916492F31E39100B1AB02 /* DroidConnectApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DroidConnectApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE0916492F31E39100B1AB02 /* DroidConnect.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DroidConnect.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE09164B2F31E39100B1AB02 /* DroidConnectApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroidConnectApp.swift; sourceTree = "<group>"; };
 		CE09164D2F31E39100B1AB02 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CE09164F2F31E39100B1AB02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CE0916512F31E39100B1AB02 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		CE0916772F31E39200B1AB02 /* DroidConnectApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DroidConnectApp.entitlements; sourceTree = "<group>"; };
+		CE0916812F31E39200B1AB02 /* adb */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = adb; path = Resources/Binaries/adb; sourceTree = "<group>"; };
+		CE0916852F31E39200B1AB02 /* scrcpy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = scrcpy; path = Resources/Binaries/scrcpy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +53,7 @@
 				CE09164F2F31E39100B1AB02 /* Assets.xcassets */,
 				CE0916512F31E39100B1AB02 /* index.html */,
 				CE0916772F31E39200B1AB02 /* DroidConnectApp.entitlements */,
+				CE0916822F31E39200B1AB02 /* Resources */,
 			);
 			path = DroidConnectApp;
 			sourceTree = "<group>";
@@ -56,9 +61,26 @@
 		CE09164A5F31E39100B1AB02 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CE0916492F31E39100B1AB02 /* DroidConnectApp.app */,
+				CE0916492F31E39100B1AB02 /* DroidConnect.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CE0916822F31E39200B1AB02 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				CE0916832F31E39200B1AB02 /* Binaries */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		CE0916832F31E39200B1AB02 /* Binaries */ = {
+			isa = PBXGroup;
+			children = (
+				CE0916812F31E39200B1AB02 /* adb */,
+				CE0916852F31E39200B1AB02 /* scrcpy */,
+			);
+			path = Binaries;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -78,7 +100,7 @@
 			);
 			name = DroidConnectApp;
 			productName = DroidConnectApp;
-			productReference = CE0916492F31E39100B1AB02 /* DroidConnectApp.app */;
+			productReference = CE0916492F31E39100B1AB02 /* DroidConnect.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -126,6 +148,8 @@
 			files = (
 				CE0916502F31E39100B1AB02 /* Assets.xcassets in Resources */,
 				CE0916522F31E39100B1AB02 /* index.html in Resources */,
+				CE0916802F31E39200B1AB02 /* adb in Resources */,
+				CE0916842F31E39200B1AB02 /* scrcpy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,9 +296,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = DroidConnectApp/DroidConnectApp.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = M9NL4PJ9AL;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
@@ -301,9 +327,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = DroidConnectApp/DroidConnectApp.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = M9NL4PJ9AL;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;

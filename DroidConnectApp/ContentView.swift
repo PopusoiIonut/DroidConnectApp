@@ -2,27 +2,50 @@ import SwiftUI
 import WebKit
 
 class Coordinator: NSObject, WKScriptMessageHandler {
+    weak var webView: WKWebView?
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        if message.name == "nativeAppBridge", let msgString = message.body as? String {
+        guard let msgString = message.body as? String else { return }
+        
+        if message.name == "nativeAppBridge" {
             DispatchQueue.main.async {
-                let alert = NSAlert()
-                if msgString == "device_required_files" || msgString == "device_required_mirror" {
-                    alert.messageText = "Device Required"
-                    alert.informativeText = "Please connect an Android handset via USB or Wireless ADB to use this feature."
-                    alert.alertStyle = .warning
-                } else if msgString == "start_mirroring" {
-                    alert.messageText = "Initializing Screen Stream"
-                    alert.informativeText = "Preparing ADB and launching scrcpy..."
-                    alert.alertStyle = .informational
-                } else {
-                    alert.messageText = "Action Received"
-                    alert.informativeText = "ID: \(msgString)"
-                    alert.alertStyle = .informational
+                switch msgString {
+                case "scan_devices":
+                    self.performScan()
+                case "start_mirroring":
+                    self.performMirror()
+                default:
+                    self.showAlert(message: "Action Received", info: "ID: \(msgString)")
                 }
-                alert.addButton(withTitle: "OK")
-                alert.runModal()
             }
         }
+    }
+    
+    private func performScan() {
+        let devices = ADBService.shared.listDevices()
+        let jsonArray = devices.description // Simple array string
+        
+        // Return results to JS
+        let js = "if(window.updateDevices) { window.updateDevices(\(jsonArray)); }"
+        webView?.evaluateJavaScript(js, completionHandler: nil)
+    }
+    
+    private func performMirror() {
+        let devices = ADBService.shared.listDevices()
+        if let first = devices.first {
+            ADBService.shared.startMirroring(deviceId: first)
+        } else {
+            showAlert(message: "Mirroring Failed", info: "No device connected to mirror.")
+        }
+    }
+    
+    private func showAlert(message: String, info: String) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.informativeText = info
+        alert.alertStyle = (message.contains("Failed") || message.contains("Required")) ? .warning : .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
 
@@ -43,6 +66,8 @@ struct WebView: NSViewRepresentable {
         configuration.userContentController = userContentController
         
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        context.coordinator.webView = webView
+        
         webView.layer?.backgroundColor = NSColor.clear.cgColor
         webView.setValue(false, forKey: "drawsBackground")
         return webView
