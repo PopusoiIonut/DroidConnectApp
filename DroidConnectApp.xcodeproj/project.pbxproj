@@ -189,9 +189,8 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/adb",
-				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/scrcpy",
 			);
+			alwaysOutOfDate = 1;
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Sign the bundled binaries with the App Sandbox entitlement\nENTITLEMENTS=\"${PROJECT_DIR}/DroidConnectApp/child.entitlements\"\nSIGNATURE=\"${EXPANDED_CODE_SIGN_IDENTITY}\"\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"${CODE_SIGN_IDENTITY}\"\nfi\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"-\"\nfi\n\n# Construct the full path to the binaries\nBIN_DIR=\"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources\"\nADB_PATH=\"${BIN_DIR}/adb\"\nSCRCPY_PATH=\"${BIN_DIR}/scrcpy\"\n\necho \"Signing binaries with identity: ${SIGNATURE}\"\necho \"Checking for binaries at: ${BIN_DIR}\"\n\nif [ ! -f \"${ADB_PATH}\" ]; then\n  echo \"Error: adb not found at ${ADB_PATH}\"\n  exit 1\nfi\n\nif [ ! -f \"${SCRCPY_PATH}\" ]; then\n  echo \"Error: scrcpy not found at ${SCRCPY_PATH}\"\n  exit 1\nfi\n\nchmod +w \"${ADB_PATH}\"\nchmod +w \"${SCRCPY_PATH}\"\n\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${ADB_PATH}\"\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${SCRCPY_PATH}\"\n";
