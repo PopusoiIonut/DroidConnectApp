@@ -96,6 +96,7 @@
 				CE0916452F31E39100B1AB02 /* Sources */,
 				CE0916462F31E39100B1AB02 /* Frameworks */,
 				CE0916472F31E39100B1AB02 /* Resources */,
+				CE0916952F31E39200B1AB02 /* Sign Bundled Binaries */,
 			);
 			buildRules = (
 			);
@@ -170,6 +171,31 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CE0916952F31E39200B1AB02 /* Sign Bundled Binaries */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(PROJECT_DIR)/DroidConnectApp/child.entitlements",
+				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/Binaries/adb",
+				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/Binaries/scrcpy",
+			);
+			name = "Sign Bundled Binaries";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Sign the bundled binaries with the App Sandbox entitlement\nENTITLEMENTS=\"${PROJECT_DIR}/DroidConnectApp/child.entitlements\"\nSIGNATURE=\"${EXPANDED_CODE_SIGN_IDENTITY}\"\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"-\"\nfi\n\necho \"Signing binaries with identity: ${SIGNATURE}\"\n\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources/Binaries/adb\"\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources/Binaries/scrcpy\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 
 /* Begin XCBuildConfiguration section */
 		CE09166A2F31E39200B1AB02 /* Debug */ = {
