@@ -13,6 +13,7 @@
 		CE0916522F31E39100B1AB02 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = CE0916512F31E39100B1AB02 /* index.html */; };
 		CE0916802F31E39200B1AB02 /* adb in Resources */ = {isa = PBXBuildFile; fileRef = CE0916812F31E39200B1AB02 /* adb */; };
 		CE0916842F31E39200B1AB02 /* scrcpy in Resources */ = {isa = PBXBuildFile; fileRef = CE0916852F31E39200B1AB02 /* scrcpy */; };
+		CE0916902F31E39200B1AB02 /* ADBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0916912F31E39200B1AB02 /* ADBService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		CE0916772F31E39200B1AB02 /* DroidConnectApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DroidConnectApp.entitlements; sourceTree = "<group>"; };
 		CE0916812F31E39200B1AB02 /* adb */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = adb; path = Resources/Binaries/adb; sourceTree = "<group>"; };
 		CE0916852F31E39200B1AB02 /* scrcpy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = scrcpy; path = Resources/Binaries/scrcpy; sourceTree = "<group>"; };
+		CE0916912F31E39200B1AB02 /* ADBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADBService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 				CE0916512F31E39100B1AB02 /* index.html */,
 				CE0916772F31E39200B1AB02 /* DroidConnectApp.entitlements */,
 				CE0916822F31E39200B1AB02 /* Resources */,
+				CE0916912F31E39200B1AB02 /* ADBService.swift */,
 			);
 			path = DroidConnectApp;
 			sourceTree = "<group>";
@@ -71,7 +74,7 @@
 			children = (
 				CE0916832F31E39200B1AB02 /* Binaries */,
 			);
-			path = Resources;
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		CE0916832F31E39200B1AB02 /* Binaries */ = {
@@ -80,7 +83,7 @@
 				CE0916812F31E39200B1AB02 /* adb */,
 				CE0916852F31E39200B1AB02 /* scrcpy */,
 			);
-			path = Binaries;
+			name = Binaries;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -161,6 +164,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE09164C2F31E39100B1AB02 /* DroidConnectApp.swift in Sources */,
+				CE0916902F31E39200B1AB02 /* ADBService.swift in Sources */,
 				CE09164E2F31E39100B1AB02 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
