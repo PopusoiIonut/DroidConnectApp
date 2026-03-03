@@ -114,8 +114,7 @@ struct VisualEffectView: NSViewRepresentable {
             if let window = nsView.window {
                 window.isMovableByWindowBackground = true
                 window.titlebarAppearsTransparent = true
-                window.titleVisibility = .hidden
-                window.minSize = NSSize(width: 800, height: 600)
+                window.minSize = NSSize(width: 600, height: 450)
             }
         }
     }

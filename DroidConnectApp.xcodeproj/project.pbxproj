@@ -11,7 +11,7 @@
 		CE09164E2F31E39100B1AB02 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE09164D2F31E39100B1AB02 /* ContentView.swift */; };
 		CE0916502F31E39100B1AB02 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE09164F2F31E39100B1AB02 /* Assets.xcassets */; };
 		CE0916522F31E39100B1AB02 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = CE0916512F31E39100B1AB02 /* index.html */; };
-		CE0916802F31E39200B1AB02 /* adb in Resources */ = {isa = PBXBuildFile; fileRef = CE0916812F31E39200B1AB02 /* adb */; };
+
 		CE0916842F31E39200B1AB02 /* scrcpy in Resources */ = {isa = PBXBuildFile; fileRef = CE0916852F31E39200B1AB02 /* scrcpy */; };
 		CE0916902F31E39200B1AB02 /* ADBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0916912F31E39200B1AB02 /* ADBService.swift */; };
 /* End PBXBuildFile section */
@@ -23,7 +23,7 @@
 		CE09164F2F31E39100B1AB02 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CE0916512F31E39100B1AB02 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		CE0916772F31E39200B1AB02 /* DroidConnectApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DroidConnectApp.entitlements; sourceTree = "<group>"; };
-		CE0916812F31E39200B1AB02 /* adb */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = adb; path = Resources/Binaries/adb; sourceTree = "<group>"; };
+
 		CE0916852F31E39200B1AB02 /* scrcpy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = scrcpy; path = Resources/Binaries/scrcpy; sourceTree = "<group>"; };
 		CE0916912F31E39200B1AB02 /* ADBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ADBService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -80,7 +80,7 @@
 		CE0916832F31E39200B1AB02 /* Binaries */ = {
 			isa = PBXGroup;
 			children = (
-				CE0916812F31E39200B1AB02 /* adb */,
+
 				CE0916852F31E39200B1AB02 /* scrcpy */,
 			);
 			name = Binaries;
@@ -152,7 +152,7 @@
 			files = (
 				CE0916502F31E39100B1AB02 /* Assets.xcassets in Resources */,
 				CE0916522F31E39100B1AB02 /* index.html in Resources */,
-				CE0916802F31E39200B1AB02 /* adb in Resources */,
+
 				CE0916842F31E39200B1AB02 /* scrcpy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -182,7 +182,7 @@
 			);
 			inputPaths = (
 				"$(PROJECT_DIR)/DroidConnectApp/child.entitlements",
-				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/adb",
+
 				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/scrcpy",
 			);
 			name = "Sign Bundled Binaries";
@@ -193,7 +193,7 @@
 			alwaysOutOfDate = 1;
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Sign the bundled binaries with the App Sandbox entitlement\nENTITLEMENTS=\"${PROJECT_DIR}/DroidConnectApp/child.entitlements\"\nSIGNATURE=\"${EXPANDED_CODE_SIGN_IDENTITY}\"\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"${CODE_SIGN_IDENTITY}\"\nfi\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"-\"\nfi\n\n# Construct the full path to the binaries\nBIN_DIR=\"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources\"\nADB_PATH=\"${BIN_DIR}/adb\"\nSCRCPY_PATH=\"${BIN_DIR}/scrcpy\"\n\necho \"Signing binaries with identity: ${SIGNATURE}\"\necho \"Checking for binaries at: ${BIN_DIR}\"\n\nif [ ! -f \"${ADB_PATH}\" ]; then\n  echo \"Error: adb not found at ${ADB_PATH}\"\n  exit 1\nfi\n\nif [ ! -f \"${SCRCPY_PATH}\" ]; then\n  echo \"Error: scrcpy not found at ${SCRCPY_PATH}\"\n  exit 1\nfi\n\nchmod +w \"${ADB_PATH}\"\nchmod +w \"${SCRCPY_PATH}\"\n\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${ADB_PATH}\"\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${SCRCPY_PATH}\"\n";
+			shellScript = "# Sign the bundled binaries with the App Sandbox entitlement\nENTITLEMENTS=\"${PROJECT_DIR}/DroidConnectApp/child.entitlements\"\nSIGNATURE=\"${EXPANDED_CODE_SIGN_IDENTITY}\"\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"${CODE_SIGN_IDENTITY}\"\nfi\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"-\"\nfi\n\n# Construct the full path to the binaries\nBIN_DIR=\"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources\"\nSCRCPY_PATH=\"${BIN_DIR}/scrcpy\"\n\necho \"Signing binaries with identity: ${SIGNATURE}\"\necho \"Checking for binaries at: ${BIN_DIR}\"\n\nif [ ! -f \"${SCRCPY_PATH}\" ]; then\n  echo \"Error: scrcpy not found at ${SCRCPY_PATH}\"\n  exit 1\nfi\n\nchmod +w \"${SCRCPY_PATH}\"\n\ncodesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${SCRCPY_PATH}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -3,18 +3,14 @@ import Foundation
 class ADBService {
     static let shared = ADBService()
     
-    // Common paths for ADB - in a bundled app, this would point to the internal Resources folder
+    // Common paths for ADB - for App Store compliance, we do not bundle adb
     private var activeAdbPath: String? {
-        // 1. Try bundled binary first
-        if let bundledPath = Bundle.main.path(forResource: "adb", ofType: nil) {
-            return bundledPath
-        }
-        
-        // 2. Fallback to common system paths
+        // 1. Common system paths (Homebrew, etc.)
         let adbPaths = [
-            "/usr/local/bin/adb",
             "/opt/homebrew/bin/adb",
-            "/usr/bin/adb"
+            "/usr/local/bin/adb",
+            "/usr/bin/adb",
+            "\(FileManager.default.homeDirectoryForCurrentUser.path)/Library/Android/sdk/platform-tools/adb"
         ]
         
         for path in adbPaths {
@@ -22,6 +18,23 @@ class ADBService {
                 return path
             }
         }
+        
+        // 2. Check if it's in the PATH environment variable
+        let task = Process()
+        task.launchPath = "/usr/bin/which"
+        task.arguments = ["adb"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.launch()
+        task.waitUntilExit()
+        
+        if task.terminationStatus == 0 {
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
+                return path
+            }
+        }
+        
         return nil
     }
     
