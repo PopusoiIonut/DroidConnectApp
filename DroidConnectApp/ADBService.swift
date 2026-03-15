@@ -9,18 +9,18 @@ final class ADBService {
     private func getAdbPath() -> (path: String?, checked: [String]) {
         var checkedPaths: [String] = []
         
-        // 1. Try bundled binary first
-        if let bundled = binaryURL(named: "adb") {
-            return (bundled.path, ["Bundled: \(bundled.path)"])
+        // 1. PRIORITIZE the known local path (since the bundled one is causing SIGTRAP)
+        let localPath = "/Users/user/Documents/Documents - USER’s MacBook Air/projects/adb_tools/platform-tools/adb"
+        checkedPaths.append(localPath)
+        if FileManager.default.fileExists(atPath: localPath) {
+            return (localPath, ["Local (Verified): \(localPath)"])
         }
-        checkedPaths.append("(Bundled App Resources)")
-        
-        // 2. Common system paths
+
+        // 2. Try common system paths
         let adbPaths = [
             "/opt/homebrew/bin/adb",
             "/usr/local/bin/adb",
             "/usr/bin/adb",
-            "/Users/user/Documents/Documents - USER’s MacBook Air/projects/adb_tools/platform-tools/adb",
             "\(FileManager.default.homeDirectoryForCurrentUser.path)/Library/Android/sdk/platform-tools/adb"
         ]
         
@@ -30,8 +30,14 @@ final class ADBService {
                 return (path, checkedPaths)
             }
         }
+
+        // 3. Try bundled binary as last resort
+        if let bundled = binaryURL(named: "adb") {
+            return (bundled.path, ["Bundled: \(bundled.path)"])
+        }
+        checkedPaths.append("(Bundled App Resources)")
         
-        // 3. Check shell PATH
+        // 4. Check shell PATH
         if let pathFromWhich = whichBinary("adb") {
             checkedPaths.append("(Shell PATH: \(pathFromWhich))")
             return (pathFromWhich, checkedPaths)
@@ -56,7 +62,6 @@ final class ADBService {
     
     private func binaryURL(named name: String) -> URL? {
         let candidates: [URL?] = [
-            Bundle.main.url(forResource: name, withExtension: nil),
             Bundle.main.url(forResource: name, withExtension: nil, subdirectory: "Resources/Binaries"),
             Bundle.main.url(forResource: name, withExtension: nil, subdirectory: "Binaries"),
             Bundle.main.resourceURL?.appendingPathComponent(name),
@@ -67,8 +72,6 @@ final class ADBService {
             if FileManager.default.fileExists(atPath: url.path) {
                 if FileManager.default.isExecutableFile(atPath: url.path) {
                     return url
-                } else {
-                    NSLog("[ADBService] Found binary at \(url.path) but it is NOT executable.")
                 }
             }
         }
@@ -99,32 +102,29 @@ final class ADBService {
         let result = getAdbPath()
         guard let adb = result.path else {
             let pathsStr = result.checked.joined(separator: "\n• ")
-            let errorMsg = "ADB binary not found. Searched:\n• \(pathsStr)"
-            return ([], errorMsg, "")
+            return ([], "ADB not found. Searched:\n• \(pathsStr)", "")
         }
         
-        // Final sanity check
-        if !FileManager.default.fileExists(atPath: adb) {
-            return ([], "Binary found during search but vanished! Path: \(adb)", "")
-        }
-        
-        // Try version check first to see if binary is alive
-        let versionInfo = runCommand(path: adb, arguments: ["version"])
-        
-        var output = runCommand(path: adb, arguments: ["devices", "-l"])
+        let versionRes = runCommand(path: adb, arguments: ["version"])
+        var outputRes = runCommand(path: adb, arguments: ["devices", "-l"])
         
         // If empty, try one reset
-        if output.contains("List of devices attached") && output.components(separatedBy: .newlines).count < 3 {
+        if outputRes.output.contains("List of devices attached") && outputRes.output.components(separatedBy: .newlines).count < 3 {
              _ = runCommand(path: adb, arguments: ["kill-server"])
-             output = runCommand(path: adb, arguments: ["devices", "-l"])
+             outputRes = runCommand(path: adb, arguments: ["devices", "-l"])
         }
 
-        if output.starts(with: "Error:") { 
-            return ([], "Execution Error: \(output)\nADB Path: \(adb)", output) 
+        let output = outputRes.output
+        let exitCode = outputRes.status
+        
+        if exitCode != 0 {
+            let errorMsg = "ADB Failed (Exit Code: \(exitCode))\nPath: \(adb)\nOutput: \(output)"
+            return ([], errorMsg, output)
         }
         
         if output.isEmpty {
-            return ([], "ADB ran but produced NO output.\nBinary: \(adb)\nVersion Check: \(versionInfo)", "")
+            let errorMsg = "ADB produced NO output.\nPath: \(adb)\nVersion Res: \(versionRes.output) (Exit \(versionRes.status))"
+            return ([], errorMsg, "")
         }
         
         let lines = output.components(separatedBy: .newlines)
@@ -133,7 +133,6 @@ final class ADBService {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty, !trimmed.lowercased().contains("list of devices") else { continue }
             
-            // Look for "device" as a status
             if (trimmed.contains("device") || trimmed.contains("unauthorized") || trimmed.contains("offline")) {
                 let parts = trimmed.components(separatedBy: .whitespaces)
                 if !parts.isEmpty {
@@ -142,40 +141,32 @@ final class ADBService {
             }
         }
         
-        let error: String? = devices.isEmpty ? "No devices connected.\nADB Output:\n\(output)\nVersion: \(versionInfo)" : nil
+        let error: String? = devices.isEmpty ? "No devices found.\nADB Output:\n\(output)" : nil
         return (devices, error, output)
     }
     
     func startMirroring(deviceId: String) {
-        guard let scrcpy = activeScrcpyPath else {
-            NSLog("[ADBService] scrcpy binary not found.")
-            return
-        }
-        
+        guard let scrcpy = activeScrcpyPath else { return }
         DispatchQueue.global(qos: .userInitiated).async {
             let task = Process()
             task.executableURL = URL(fileURLWithPath: scrcpy)
             task.arguments = ["-s", deviceId]
-            do {
-                try task.run()
-            } catch {
-                NSLog("[ADBService] Failed to launch scrcpy: \(error)")
-            }
+            try? task.run()
         }
     }
     
     func pairDevice(address: String, code: String) -> String {
         guard let adb = getAdbPath().path else { return "ADB not found" }
-        return runCommand(path: adb, arguments: ["pair", address, code])
+        return runCommand(path: adb, arguments: ["pair", address, code]).output
     }
     
     func listFiles(deviceId: String, path: String = "/sdcard/") -> [String] {
         guard let adb = getAdbPath().path else { return [] }
-        let output = runCommand(path: adb, arguments: ["-s", deviceId, "shell", "ls", "-F", path])
+        let output = runCommand(path: adb, arguments: ["-s", deviceId, "shell", "ls", "-F", path]).output
         return output.components(separatedBy: .newlines).filter { !$0.isEmpty }
     }
     
-    private func runCommand(path: String, arguments: [String]) -> String {
+    private func runCommand(path: String, arguments: [String]) -> (output: String, status: Int32) {
         let task = Process()
         let pipe = Pipe()
         
@@ -187,9 +178,11 @@ final class ADBService {
         do {
             try task.run()
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            return String(data: data, encoding: .utf8) ?? ""
+            task.waitUntilExit()
+            let output = String(data: data, encoding: .utf8) ?? ""
+            return (output, task.terminationStatus)
         } catch {
-            return "Error: \(error.localizedDescription)"
+            return ("Error: \(error.localizedDescription)", -1)
         }
     }
 }
