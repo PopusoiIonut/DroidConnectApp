@@ -52,6 +52,7 @@
 			children = (
 				CE09164B2F31E39100B1AB02 /* DroidConnectApp.swift */,
 				CE09164D2F31E39100B1AB02 /* ContentView.swift */,
+				CE0916912F31E39200B1AB02 /* ADBService.swift */,
 				CE09164F2F31E39100B1AB02 /* Assets.xcassets */,
 				CE0916512F31E39100B1AB02 /* index.html */,
 				CE0916772F31E39200B1AB02 /* DroidConnectApp.entitlements */,
