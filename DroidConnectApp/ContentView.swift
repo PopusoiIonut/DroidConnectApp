@@ -14,11 +14,32 @@ class Coordinator: NSObject, WKScriptMessageHandler {
                     self.performScan()
                 case "start_mirroring":
                     self.performMirror()
+                case "pair_device":
+                    // Format: "pair_device|192.168.1.10:5555|123456"
+                    self.performPair(message: msgString)
+                case "list_files":
+                    self.performListFiles()
                 default:
                     self.showAlert(message: "Action Received", info: "ID: \(msgString)")
                 }
             }
         }
+    }
+    
+    private func performPair(message: String) {
+        let parts = message.components(separatedBy: "|")
+        guard parts.count == 3 else { return }
+        let result = ADBService.shared.pairDevice(address: parts[1], code: parts[2])
+        showAlert(message: "Pairing Result", info: result)
+    }
+    
+    private func performListFiles() {
+        let devices = ADBService.shared.listDevices()
+        guard let first = devices.first else { return }
+        let files = ADBService.shared.listFiles(deviceId: first)
+        let jsonFiles = files.description
+        let js = "if(window.updateFileList) { window.updateFileList(\(jsonFiles)); }"
+        webView?.evaluateJavaScript(js, completionHandler: nil)
     }
     
     private func performScan() {

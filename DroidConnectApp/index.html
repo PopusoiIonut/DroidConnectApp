@@ -469,26 +469,19 @@
                         <div class="step-num">3</div>
                         <p>Enable <b>USB Debugging</b> in Developer Options.</p>
                     </div>
-                    <button class="btn-primary" onclick="completeConnection('USB')">Finish Setup</button>
+                    <button class="btn-primary" onclick="completeSetup()">Finish Setup</button>
                 </div>
 
                 <!-- Wireless Pairing Panel -->
                 <div id="wireless-panel" class="panel">
                     <h3 style="margin-bottom: 20px;">Wireless Pairing</h3>
-                    <div class="guide-step">
-                        <div class="step-num">1</div>
-                        <p>Connect phone to the same Wi-Fi as this Mac.</p>
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="pair-ip" placeholder="IP Address (e.g. 192.168.1.10:5555)" 
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff; border-radius: 8px; margin-bottom: 10px;">
+                        <input type="text" id="pair-code" placeholder="Pairing Code" 
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff; border-radius: 8px;">
                     </div>
-                    <div class="guide-step">
-                        <div class="step-num">2</div>
-                        <p>Go to <b>Wireless Debugging > Pair device with pairing code</b>.</p>
-                    </div>
-                    <div class="pairing-code-box">
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">ENTER THIS CODE
-                            ON YOUR PHONE</p>
-                        <span class="pairing-digit">842 195</span>
-                    </div>
-                    <button class="btn-primary" onclick="completeConnection('Wireless')">Waiting for phone...</button>
+                    <button class="btn-primary" onclick="performRealPair()">Start Pairing</button>
                 </div>
             </div>
 
@@ -505,12 +498,13 @@
                     <p style="margin-top: 10px; font-weight: 500; color: var(--text-secondary);">Please connect an
                         Android handset via USB or Wireless ADB to browse its file system.</p>
                     <button class="btn-primary" style="margin-top: 25px;"
-                        onclick="triggerNativeAlert('device_required_files')">How to Connect?</button>
+                        onclick="triggerNativeCall('device_required_files')">How to Connect?</button>
                 </div>
                 <!-- Hidden file structure (shows when connected) -->
                 <div id="file-browser-online" style="display: none; margin-top: 20px;">
-                    <p style="color: var(--success); font-weight: bold;">Device connected. Loading internal storage...
-                    </p>
+                    <div id="file-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Files will be injected here -->
+                    </div>
                 </div>
             </div>
 
@@ -529,7 +523,7 @@
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
                     <button class="btn-primary" id="start-mirror-btn"
-                        onclick="triggerNativeAlert('device_required_mirror')"
+                        onclick="triggerNativeCall('device_required_mirror')"
                         style="opacity: 0.5; background: #333;">Start Mirroring Session</button>
                 </div>
             </div>
@@ -588,6 +582,20 @@
             document.getElementById('wireless-panel').style.display = 'none';
         }
 
+        function completeSetup() {
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = 'Verifying connection...';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+            
+            // Re-use scan_devices logic
+            triggerNativeCall('scan_devices');
+            
+            // Store original button to reset if failed
+            window.lastSetupBtn = { btn, originalText };
+        }
+
         function showPanel(type) {
             hideAllPanels();
             if (type === 'guide') {
@@ -638,13 +646,20 @@
         // Called from Native Swift
         window.updateDevices = function(deviceList) {
             const dashboardBtn = document.querySelector('.action-btn:nth-child(3)');
-            dashboardBtn.style.opacity = '1';
+            if (dashboardBtn) dashboardBtn.style.opacity = '1';
             
+            // Reset "Finish Setup" buttons if they were active
+            if (window.lastSetupBtn) {
+                window.lastSetupBtn.btn.innerText = window.lastSetupBtn.originalText;
+                window.lastSetupBtn.btn.style.opacity = '1';
+                window.lastSetupBtn.btn.disabled = false;
+            }
+
             if (deviceList.length === 0) {
-                dashboardBtn.querySelector('p').innerText = 'No devices found.';
+                if (dashboardBtn) dashboardBtn.querySelector('p').innerText = 'No devices found.';
                 setDisconnectedState();
             } else {
-                dashboardBtn.querySelector('p').innerText = `Success: ${deviceList.length} device(s) found.`;
+                if (dashboardBtn) dashboardBtn.querySelector('p').innerText = `Success: ${deviceList.length} device(s) found.`;
                 completeConnection(deviceList[0]);
             }
         };
@@ -689,6 +704,57 @@
             // Wow animation
             document.querySelector('.device-card').style.transform = 'scale(1.05)';
             setTimeout(() => document.querySelector('.device-card').style.transform = 'scale(1)', 400);
+        }
+
+        function performRealPair() {
+            const ip = document.getElementById('pair-ip').value;
+            const code = document.getElementById('pair-code').value;
+            if(!ip || !code) return alert("Please enter both IP and Code");
+            triggerNativeCall(`pair_device|${ip}|${code}`);
+        }
+
+        function switchTab(tabId) {
+            // Hide all major sections
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('file-browser').style.display = 'none';
+            document.getElementById('mirroring').style.display = 'none';
+            document.getElementById('settings').style.display = 'none';
+
+            // Show selected
+            const target = tabId === 'dashboard' ? 'dashboard' : tabId;
+            document.getElementById(target).style.display = 'block';
+
+            // Update nav-item active states
+            const navItems = ['nav-devices', 'nav-files', 'nav-mirror', 'nav-settings'];
+            const map = {
+                'dashboard': 'nav-devices',
+                'file-browser': 'nav-files',
+                'mirroring': 'nav-mirror',
+                'settings': 'nav-settings'
+            };
+
+            navItems.forEach(item => {
+                document.getElementById(item).classList.toggle('active', item === map[tabId]);
+            });
+
+            // Trigger file list if entering file browser and connected
+            if(tabId === 'file-browser' && document.getElementById('status-text').innerText === 'Connected') {
+                triggerNativeCall('list_files');
+            }
+
+            // Close specific action guides if switching tabs
+            hideAllPanels();
+        }
+
+        window.updateFileList = function(files) {
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+            files.forEach(file => {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;';
+                item.innerHTML = `<span>${file.endsWith('/') ? '📁' : '📄'}</span><span>${file}</span>`;
+                list.appendChild(item);
+            });
         }
 
         // Bridge to Native SwiftUI
