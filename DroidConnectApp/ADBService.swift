@@ -95,16 +95,18 @@ final class ADBService {
     
     // MARK: - Public API
     
-    func listDevices() -> (devices: [String], error: String?) {
+    func listDevices() -> (devices: [String], error: String?, raw: String) {
         let result = getAdbPath()
         guard let adb = result.path else {
             let pathsStr = result.checked.joined(separator: "\n• ")
             let errorMsg = "ADB not found. Searched:\n• \(pathsStr)"
-            return ([], errorMsg)
+            return ([], errorMsg, "")
         }
         
-        let output = runCommand(path: adb, arguments: ["devices"])
-        if output.starts(with: "Error:") { return ([], output) }
+        let output = runCommand(path: adb, arguments: ["devices", "-l"])
+        if output.starts(with: "Error:") { 
+            return ([], output, output) 
+        }
         
         let lines = output.components(separatedBy: .newlines)
         var devices: [String] = []
@@ -112,16 +114,17 @@ final class ADBService {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty, !trimmed.lowercased().contains("list of devices") else { continue }
             
-            let parts = trimmed.components(separatedBy: .whitespaces)
-            if parts.contains("device") {
-                devices.append(parts[0].trimmingCharacters(in: .whitespaces))
-            } else if trimmed.contains("unauthorized") {
-                return ([], "Device found but unauthorized. Please check your phone for the 'Allow USB debugging' prompt.")
-            } else if trimmed.contains("offline") {
-                return ([], "Device is offline. Try reconnecting the cable.")
+            // Look for "device" as a status
+            if trimmed.contains("device") && !trimmed.contains("unauthorized") && !trimmed.contains("offline") {
+                let parts = trimmed.components(separatedBy: .whitespaces)
+                if !parts.isEmpty {
+                    devices.append(parts[0])
+                }
             }
         }
-        return (devices, nil)
+        
+        let error: String? = (devices.isEmpty && !output.isEmpty) ? "Command ran but no active devices were found. ADB Output:\n\(output)" : nil
+        return (devices, error, output)
     }
     
     func startMirroring(deviceId: String) {

@@ -35,7 +35,10 @@ class Coordinator: NSObject, WKScriptMessageHandler {
     
     private func performListFiles() {
         let result = ADBService.shared.listDevices()
-        guard let first = result.devices.first else { return }
+        guard let first = result.devices.first else {
+            showAlert(message: "File Browser Failed", info: result.error ?? "No device connected.")
+            return
+        }
         let files = ADBService.shared.listFiles(deviceId: first)
         let jsonFiles = files.description
         let js = "if(window.updateFileList) { window.updateFileList(\(jsonFiles)); }"
@@ -46,8 +49,9 @@ class Coordinator: NSObject, WKScriptMessageHandler {
         let result = ADBService.shared.listDevices()
         let jsonArray = result.devices.description
         
-        if result.devices.isEmpty, let error = result.error {
-            showAlert(message: "Connection Error", info: error)
+        if result.devices.isEmpty {
+            let errorMsg = result.error ?? "No device detected. (Empty response)"
+            showAlert(message: "Connection Status", info: errorMsg)
         }
         
         // Return results to JS
