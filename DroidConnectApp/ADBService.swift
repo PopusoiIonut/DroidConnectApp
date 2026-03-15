@@ -17,6 +17,7 @@ final class ADBService {
             "/opt/homebrew/bin/adb",
             "/usr/local/bin/adb",
             "/usr/bin/adb",
+            "/Users/user/Documents/Documents - USER’s MacBook Air/projects/adb_tools/platform-tools/adb",
             "\(FileManager.default.homeDirectoryForCurrentUser.path)/Library/Android/sdk/platform-tools/adb"
         ]
         
