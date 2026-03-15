@@ -103,7 +103,14 @@ final class ADBService {
             return ([], errorMsg, "")
         }
         
-        let output = runCommand(path: adb, arguments: ["devices", "-l"])
+        var output = runCommand(path: adb, arguments: ["devices", "-l"])
+        
+        // If empty, try one reset
+        if output.contains("List of devices attached") && output.components(separatedBy: .newlines).count < 3 {
+             _ = runCommand(path: adb, arguments: ["kill-server"])
+             output = runCommand(path: adb, arguments: ["devices", "-l"])
+        }
+
         if output.starts(with: "Error:") { 
             return ([], output, output) 
         }
