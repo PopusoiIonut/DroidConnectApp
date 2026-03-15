@@ -99,9 +99,17 @@ final class ADBService {
         let result = getAdbPath()
         guard let adb = result.path else {
             let pathsStr = result.checked.joined(separator: "\n• ")
-            let errorMsg = "ADB not found. Searched:\n• \(pathsStr)"
+            let errorMsg = "ADB binary not found. Searched:\n• \(pathsStr)"
             return ([], errorMsg, "")
         }
+        
+        // Final sanity check
+        if !FileManager.default.fileExists(atPath: adb) {
+            return ([], "Binary found during search but vanished! Path: \(adb)", "")
+        }
+        
+        // Try version check first to see if binary is alive
+        let versionInfo = runCommand(path: adb, arguments: ["version"])
         
         var output = runCommand(path: adb, arguments: ["devices", "-l"])
         
@@ -112,7 +120,11 @@ final class ADBService {
         }
 
         if output.starts(with: "Error:") { 
-            return ([], output, output) 
+            return ([], "Execution Error: \(output)\nADB Path: \(adb)", output) 
+        }
+        
+        if output.isEmpty {
+            return ([], "ADB ran but produced NO output.\nBinary: \(adb)\nVersion Check: \(versionInfo)", "")
         }
         
         let lines = output.components(separatedBy: .newlines)
@@ -122,7 +134,7 @@ final class ADBService {
             guard !trimmed.isEmpty, !trimmed.lowercased().contains("list of devices") else { continue }
             
             // Look for "device" as a status
-            if trimmed.contains("device") && !trimmed.contains("unauthorized") && !trimmed.contains("offline") {
+            if (trimmed.contains("device") || trimmed.contains("unauthorized") || trimmed.contains("offline")) {
                 let parts = trimmed.components(separatedBy: .whitespaces)
                 if !parts.isEmpty {
                     devices.append(parts[0])
@@ -130,7 +142,7 @@ final class ADBService {
             }
         }
         
-        let error: String? = (devices.isEmpty && !output.isEmpty) ? "Command ran but no active devices were found. ADB Output:\n\(output)" : nil
+        let error: String? = devices.isEmpty ? "No devices connected.\nADB Output:\n\(output)\nVersion: \(versionInfo)" : nil
         return (devices, error, output)
     }
     
