@@ -34,8 +34,8 @@ class Coordinator: NSObject, WKScriptMessageHandler {
     }
     
     private func performListFiles() {
-        let devices = ADBService.shared.listDevices()
-        guard let first = devices.first else { return }
+        let result = ADBService.shared.listDevices()
+        guard let first = result.devices.first else { return }
         let files = ADBService.shared.listFiles(deviceId: first)
         let jsonFiles = files.description
         let js = "if(window.updateFileList) { window.updateFileList(\(jsonFiles)); }"
@@ -43,8 +43,12 @@ class Coordinator: NSObject, WKScriptMessageHandler {
     }
     
     private func performScan() {
-        let devices = ADBService.shared.listDevices()
-        let jsonArray = devices.description // Simple array string
+        let result = ADBService.shared.listDevices()
+        let jsonArray = result.devices.description
+        
+        if result.devices.isEmpty, let error = result.error {
+            showAlert(message: "Connection Error", info: error)
+        }
         
         // Return results to JS
         let js = "if(window.updateDevices) { window.updateDevices(\(jsonArray)); }"
@@ -52,11 +56,12 @@ class Coordinator: NSObject, WKScriptMessageHandler {
     }
     
     private func performMirror() {
-        let devices = ADBService.shared.listDevices()
-        if let first = devices.first {
+        let result = ADBService.shared.listDevices()
+        if let first = result.devices.first {
             ADBService.shared.startMirroring(deviceId: first)
         } else {
-            showAlert(message: "Mirroring Failed", info: "No device connected to mirror.")
+            let errorMsg = result.error ?? "No device connected to mirror."
+            showAlert(message: "Mirroring Failed", info: errorMsg)
         }
     }
     

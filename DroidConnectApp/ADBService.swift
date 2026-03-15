@@ -82,13 +82,19 @@ final class ADBService {
     
     // MARK: - Public API
     
-    func listDevices() -> [String] {
+    func listDevices() -> (devices: [String], error: String?) {
         guard let adb = activeAdbPath else {
-            NSLog("[ADBService] adb binary not found in any path.")
-            return []
+            let errorMsg = "ADB binary not found. Checked: Bundle, Homebrew, /usr/local/bin, and Android SDK."
+            NSLog("[ADBService] \(errorMsg)")
+            return ([], errorMsg)
         }
         
         let output = runCommand(path: adb, arguments: ["devices"])
+        
+        if output.starts(with: "Error:") {
+            return ([], output)
+        }
+        
         let lines = output.components(separatedBy: .newlines)
         
         var devices: [String] = []
@@ -96,12 +102,17 @@ final class ADBService {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty, !trimmed.lowercased().contains("list of devices") else { continue }
             
+            // Standard adb output is "serial\tdevice"
             let parts = trimmed.components(separatedBy: .whitespaces)
             if parts.contains("device") {
                 devices.append(parts[0].trimmingCharacters(in: .whitespaces))
+            } else if trimmed.contains("unauthorized") {
+                return ([], "Device found but unauthorized. Please check your phone for the 'Allow USB debugging' prompt.")
+            } else if trimmed.contains("offline") {
+                return ([], "Device is offline. Try reconnecting the cable.")
             }
         }
-        return devices
+        return (devices, nil)
     }
     
     func startMirroring(deviceId: String) {
