@@ -115,7 +115,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					CE0916482F31E39100B1AB02 = {
 						CreatedOnToolsVersion = 15.1;
@@ -179,7 +179,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Sign the bundled binaries with the App Sandbox entitlement\nENTITLEMENTS=\"${PROJECT_DIR}/DroidConnectApp/child.entitlements\"\nSIGNATURE=\"${EXPANDED_CODE_SIGN_IDENTITY}\"\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"${CODE_SIGN_IDENTITY}\"\nfi\n\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"-\"\nfi\n\n# Construct the full path to the binaries\nBIN_DIR=\"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources\"\nSCRCPY_PATH=\"${BIN_DIR}/scrcpy\"\nADB_PATH=\"${BIN_DIR}/adb\"\n\necho \"Signing binaries with identity: ${SIGNATURE}\"\necho \"Checking for binaries at: ${BIN_DIR}\"\n\n# Sign adb if it exists\nif [ -f \"${ADB_PATH}\" ]; then\n  chmod +w \"${ADB_PATH}\"\n  codesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${ADB_PATH}\"\nfi\n\n# Sign scrcpy if it exists\nif [ -f \"${SCRCPY_PATH}\" ]; then\n  chmod +w \"${SCRCPY_PATH}\"\n  codesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${SCRCPY_PATH}\"\nfi\n";
+			shellScript = "# 1. Setup Signature\nSIGNATURE=\"${EXPANDED_CODE_SIGN_IDENTITY}\"\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"${CODE_SIGN_IDENTITY}\"\nfi\nif [ -z \"${SIGNATURE}\" ]; then\n  SIGNATURE=\"-\"\nfi\n\nENTITLEMENTS=\"${PROJECT_DIR}/DroidConnectApp/child.entitlements\"\nBUILT_APP_DIR=\"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}\"\nBIN_DIR=\"${BUILT_APP_DIR}/Resources\"\nHELPERS_DIR=\"${BUILT_APP_DIR}/Helpers\"\nFW_DIR=\"${BUILT_APP_DIR}/Frameworks\"\nSRC_FW_DIR=\"${PROJECT_DIR}/DroidConnectApp/Frameworks\"\n\necho \"Signing binaries and dynamic libraries with identity: ${SIGNATURE}\"\n\n# 2. Copy and sign dynamic libraries if they exist in source\nif [ -d \"${SRC_FW_DIR}\" ]; then\n  echo \"Copying dynamic libraries to Frameworks directory...\"\n  mkdir -p \"${FW_DIR}\"\n  cp -R \"${SRC_FW_DIR}/\" \"${FW_DIR}/\"\n  \n  # Sign all dynamic libraries to satisfy Library Validation\n  for dylib in \"${FW_DIR}\"/*.dylib; do\n    if [ -f \"${dylib}\" ]; then\n      chmod +w \"${dylib}\"\n      echo \"Signing dynamic library: ${dylib}\"\n      codesign --force --sign \"${SIGNATURE}\" \"${dylib}\"\n    fi\n  done\nfi\n\nmkdir -p \"${HELPERS_DIR}\"\n\n# 3. Move and Sign adb if it exists\nADB_PATH=\"${BIN_DIR}/adb\"\nADB_HELP_PATH=\"${HELPERS_DIR}/adb\"\nif [ -f \"${ADB_PATH}\" ]; then\n  echo \"Moving adb to Helpers...\"\n  mv \"${ADB_PATH}\" \"${ADB_HELP_PATH}\"\nfi\nif [ -f \"${ADB_HELP_PATH}\" ]; then\n  chmod +w \"${ADB_HELP_PATH}\"\n  echo \"Signing adb helper binary...\"\n  codesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${ADB_HELP_PATH}\"\nfi\n\n# 4. Move and Sign scrcpy if it exists\nSCRCPY_PATH=\"${BIN_DIR}/scrcpy\"\nSCRCPY_HELP_PATH=\"${HELPERS_DIR}/scrcpy\"\nif [ -f \"${SCRCPY_PATH}\" ]; then\n  echo \"Moving scrcpy to Helpers...\"\n  mv \"${SCRCPY_PATH}\" \"${SCRCPY_HELP_PATH}\"\nfi\nif [ -f \"${SCRCPY_HELP_PATH}\" ]; then\n  chmod +w \"${SCRCPY_HELP_PATH}\"\n  echo \"Signing scrcpy helper binary...\"\n  codesign --force --options runtime --entitlements \"${ENTITLEMENTS}\" --sign \"${SIGNATURE}\" \"${SCRCPY_HELP_PATH}\"\nfi\n\n# 5. Copy scrcpy-server to Resources if it exists in resources\nSCRCPY_SERVER_SRC=\"${PROJECT_DIR}/DroidConnectApp/Resources/Binaries/scrcpy-server\"\nSCRCPY_SERVER_DEST=\"${BIN_DIR}/scrcpy-server\"\nif [ -f \"${SCRCPY_SERVER_SRC}\" ]; then\n  echo \"Copying scrcpy-server to Resources...\"\n  cp \"${SCRCPY_SERVER_SRC}\" \"${SCRCPY_SERVER_DEST}\"\n  chmod +r \"${SCRCPY_SERVER_DEST}\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -330,8 +330,18 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = M9NL4PJ9AL;
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = DroidConnect;
 				INFOPLIST_KEY_CFBundleShortVersionString = 1.0;
@@ -359,8 +369,18 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = M9NL4PJ9AL;
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = DroidConnect;
 				INFOPLIST_KEY_CFBundleShortVersionString = 1.0;

@@ -361,6 +361,22 @@
             transform: scale(1.02);
             box-shadow: 0 10px 25px rgba(0, 122, 255, 0.4);
         }
+
+        .toolbar-btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toolbar-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 
@@ -472,16 +488,42 @@
                     <button class="btn-primary" onclick="completeSetup()">Finish Setup</button>
                 </div>
 
-                <!-- Wireless Pairing Panel -->
+                <!-- Wireless Connection/Pairing Panel -->
                 <div id="wireless-panel" class="panel">
-                    <h3 style="margin-bottom: 20px;">Wireless Pairing</h3>
-                    <div style="margin-bottom: 20px;">
-                        <input type="text" id="pair-ip" placeholder="IP Address (e.g. 192.168.1.10:5555)" 
-                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff; border-radius: 8px; margin-bottom: 10px;">
-                        <input type="text" id="pair-code" placeholder="Pairing Code" 
-                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: #fff; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem;">Wireless ADB</h3>
+                        <div style="background: rgba(255,255,255,0.03); padding: 3px; border-radius: 10px; display: inline-flex; border: 1px solid var(--glass-border);">
+                            <div id="subtab-connect" onclick="switchWirelessTab('connect')" 
+                                 style="padding: 6px 14px; border-radius: 7px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #fff; background: var(--accent-primary); transition: all 0.2s ease;">Quick Connect</div>
+                            <div id="subtab-pair" onclick="switchWirelessTab('pair')" 
+                                 style="padding: 6px 14px; border-radius: 7px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); background: transparent; transition: all 0.2s ease;">Pair Device</div>
+                        </div>
                     </div>
-                    <button class="btn-primary" onclick="performRealPair()">Start Pairing</button>
+                    
+                    <!-- Direct Connect Section -->
+                    <div id="wireless-connect-section">
+                        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">
+                            Connect to an already paired device.<br>
+                            <span style="color: var(--warning); font-weight: 600;">⚠️ Important Port Info:</span> Do NOT use the 6-digit pairing port. Use the port displayed next to <b>"IP address & Port"</b> on your phone's main Wireless Debugging screen (this changes dynamically each time WiFi re-associates or is toggled).
+                        </p>
+                        <div style="margin-bottom: 20px;">
+                            <input type="text" id="connect-ip" placeholder="IP Address & Port (e.g. 192.168.1.10:5555)" 
+                                style="width: 100%; padding: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); color: #fff; border-radius: 10px; font-size: 0.95rem;">
+                        </div>
+                        <button class="btn-primary" onclick="performRealConnect()" style="width: 100%; margin-top: 0;">Establish Connection</button>
+                    </div>
+
+                    <!-- Pairing Section -->
+                    <div id="wireless-pair-section" style="display: none;">
+                        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">Android 11+ pairing setup. Tap "Pair device with pairing code" in your phone's Developer Options.</p>
+                        <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+                            <input type="text" id="pair-ip" placeholder="Pairing IP & Port (e.g. 192.168.1.10:38421)" 
+                                style="width: 100%; padding: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); color: #fff; border-radius: 10px; font-size: 0.95rem;">
+                            <input type="text" id="pair-code" placeholder="6-digit Pairing Code" 
+                                style="width: 100%; padding: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); color: #fff; border-radius: 10px; font-size: 0.95rem;">
+                        </div>
+                        <button class="btn-primary" onclick="performRealPair()" style="width: 100%; margin-top: 0;">Pair and Connect</button>
+                    </div>
                 </div>
             </div>
 
@@ -502,6 +544,18 @@
                 </div>
                 <!-- Hidden file structure (shows when connected) -->
                 <div id="file-browser-online" style="display: none; margin-top: 20px;">
+                    <div id="current-path-header" style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--accent-secondary); margin-bottom: 15px; display: none;">📂 /sdcard/</div>
+                    
+                    <!-- File Browser Toolbar -->
+                    <div class="file-toolbar" style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center;">
+                        <button class="toolbar-btn btn-primary" onclick="triggerNativeCall('upload_file|' + currentDirectoryPath)" style="margin: 0; padding: 10px 18px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                            <span>📤</span> Upload File
+                        </button>
+                        <button class="toolbar-btn toolbar-btn-secondary" onclick="triggerNativeCall('create_folder|' + currentDirectoryPath)" style="margin: 0; padding: 10px 18px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                            <span>📁+</span> New Folder
+                        </button>
+                    </div>
+
                     <div id="file-list" style="display: flex; flex-direction: column; gap: 8px;">
                         <!-- Files will be injected here -->
                     </div>
@@ -535,7 +589,7 @@
                     <p class="header-subtitle">Configure DroidConnect preferences.</p>
                 </div>
                 <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 16px;">
-                    <div
+                    <div id="setting-usb-row"
                         style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid var(--glass-border);">
                         <div>
                             <p style="font-weight: 600;">Auto-connect on USB</p>
@@ -553,6 +607,40 @@
                         </div>
                         <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--accent-primary);">
                     </div>
+
+                    <!-- System Diagnostics Console -->
+                    <div style="margin-top: 24px; padding: 24px; background: rgba(0,0,0,0.25); border-radius: 16px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; color: #fff;">⚙️ ADB System Diagnostics</h3>
+                            <button class="btn-primary" onclick="refreshDiagnostics()" style="margin: 0; padding: 8px 16px; font-size: 0.85rem; border-radius: 8px; box-shadow: none;">Refresh Console</button>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 0.88rem;">
+                            <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: var(--text-secondary);">ADB Server Status:</span>
+                                <span id="diag-server-status" style="font-weight: 600; margin-left: 6px; color: var(--warning);">Checking...</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: var(--text-secondary);">Sandbox Active:</span>
+                                <span id="diag-sandbox-status" style="font-weight: 600; margin-left: 6px; color: var(--accent-secondary);">Yes (Strict)</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.85rem; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-secondary);">ADB Binary Path In Use</div>
+                            <div id="diag-adb-path" style="padding: 12px; font-family: monospace; word-break: break-all; color: #fff; background: rgba(0,0,0,0.15);">Searching...</div>
+                        </div>
+
+                        <div style="font-size: 0.85rem; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-secondary);">Checked Search Paths</div>
+                            <pre id="diag-checked-paths" style="padding: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-all; color: var(--text-secondary); max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.15);"></pre>
+                        </div>
+
+                        <div style="font-size: 0.85rem; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-secondary);">Raw Device Scan Output (adb devices -l)</div>
+                            <pre id="diag-raw-output" style="padding: 12px; font-family: monospace; white-space: pre-wrap; color: var(--accent-secondary); max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.15);">No output captured yet.</pre>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -560,6 +648,34 @@
 
     <script>
         let currentMode = 'usb';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const isSandboxed = window.isAppSandboxed === true;
+            
+            const welcomeText = document.getElementById('welcome-text');
+            const subtitleText = document.getElementById('subtitle-text');
+            const modeWrapper = document.querySelector('.mode-wrapper');
+            const logoText = document.querySelector('.logo-text');
+            const usbSettingRow = document.getElementById('setting-usb-row');
+            
+            if (isSandboxed) {
+                // App Store Wireless-Only Mode
+                logoText.innerText = 'DroidConnect Wireless';
+                welcomeText.innerHTML = 'DroidConnect Wireless';
+                subtitleText.innerText = 'Connect and manage your Android devices completely cable-free.';
+                if (modeWrapper) modeWrapper.style.display = 'none';
+                if (usbSettingRow) usbSettingRow.style.display = 'none';
+                setMode('wireless');
+            } else {
+                // Direct-Distribution Pro Mode (USB + Wireless)
+                logoText.innerText = 'DroidConnect Pro';
+                welcomeText.innerHTML = 'Welcome to DroidConnect Pro';
+                subtitleText.innerText = 'Choose your connection mode below (USB or Wireless).';
+                if (modeWrapper) modeWrapper.style.display = 'inline-flex';
+                if (usbSettingRow) usbSettingRow.style.display = 'flex';
+                setMode('usb');
+            }
+        });
 
         function setMode(mode) {
             currentMode = mode;
@@ -607,33 +723,6 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        function switchTab(tabId) {
-            // Hide all major sections
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('file-browser').style.display = 'none';
-            document.getElementById('mirroring').style.display = 'none';
-            document.getElementById('settings').style.display = 'none';
-
-            // Show selected
-            const target = tabId === 'dashboard' ? 'dashboard' : tabId;
-            document.getElementById(target).style.display = 'block';
-
-            // Update nav-item active states
-            const navItems = ['nav-devices', 'nav-files', 'nav-mirror', 'nav-settings'];
-            const map = {
-                'dashboard': 'nav-devices',
-                'file-browser': 'nav-files',
-                'mirroring': 'nav-mirror',
-                'settings': 'nav-settings'
-            };
-
-            navItems.forEach(item => {
-                document.getElementById(item).classList.toggle('active', item === map[tabId]);
-            });
-
-            // Close specific action guides if switching tabs
-            hideAllPanels();
-        }
 
         function testConnection() {
             const btn = event.currentTarget;
@@ -706,6 +795,32 @@
             setTimeout(() => document.querySelector('.device-card').style.transform = 'scale(1)', 400);
         }
 
+        function switchWirelessTab(tab) {
+            document.getElementById('wireless-connect-section').style.display = tab === 'connect' ? 'block' : 'none';
+            document.getElementById('wireless-pair-section').style.display = tab === 'pair' ? 'block' : 'none';
+            
+            const btnConnect = document.getElementById('subtab-connect');
+            const btnPair = document.getElementById('subtab-pair');
+            
+            if (tab === 'connect') {
+                btnConnect.style.color = '#fff';
+                btnConnect.style.background = 'var(--accent-primary)';
+                btnPair.style.color = 'var(--text-secondary)';
+                btnPair.style.background = 'transparent';
+            } else {
+                btnConnect.style.color = 'var(--text-secondary)';
+                btnConnect.style.background = 'transparent';
+                btnPair.style.color = '#fff';
+                btnPair.style.background = 'var(--accent-primary)';
+            }
+        }
+
+        function performRealConnect() {
+            const ip = document.getElementById('connect-ip').value;
+            if(!ip) return alert("Please enter the IP Address & Port");
+            triggerNativeCall(`connect_device|${ip}`);
+        }
+
         function performRealPair() {
             const ip = document.getElementById('pair-ip').value;
             const code = document.getElementById('pair-code').value;
@@ -742,20 +857,189 @@
                 triggerNativeCall('list_files');
             }
 
+            // Sync diagnostics automatically when entering Settings
+            if(tabId === 'settings') {
+                refreshDiagnostics();
+            }
+            
             // Close specific action guides if switching tabs
             hideAllPanels();
         }
 
-        window.updateFileList = function(files) {
+        let currentDirectoryPath = '/sdcard/';
+
+        function getParentPath(path) {
+            if (path === '/sdcard/' || path === '/sdcard') return null;
+            let cleanPath = path.endsWith('/') ? path.slice(0, -1) : path;
+            let idx = cleanPath.lastIndexOf('/');
+            if (idx !== -1) {
+                return cleanPath.slice(0, idx + 1);
+            }
+            return '/sdcard/';
+        }
+
+        window.updateFileList = function(files, currentPath) {
+            currentDirectoryPath = currentPath || '/sdcard/';
+            
+            // Show path header
+            const pathHeader = document.getElementById('current-path-header');
+            if (pathHeader) {
+                pathHeader.innerText = `📂 ${currentDirectoryPath}`;
+                pathHeader.style.display = 'block';
+            }
+            
             const list = document.getElementById('file-list');
             list.innerHTML = '';
+            
+            // Add Back Button (..) if we are not at root
+            const parent = getParentPath(currentDirectoryPath);
+            if (parent) {
+                const backItem = document.createElement('div');
+                backItem.style.cssText = 'padding: 10px 16px; background: rgba(0, 122, 255, 0.08); border: 1px dashed var(--accent-primary); border-radius: 12px; font-size: 0.92rem; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);';
+                backItem.innerHTML = `
+                    <span style="font-size: 1.25rem; flex-shrink: 0;">⬆️</span>
+                    <span style="font-weight: 600; color: var(--accent-primary);">Parent Directory (..)</span>
+                `;
+                backItem.onclick = () => {
+                    triggerNativeCall(`list_files|${parent}`);
+                };
+                backItem.addEventListener('mouseenter', () => {
+                    backItem.style.background = 'rgba(0, 122, 255, 0.12)';
+                    backItem.style.transform = 'translateY(-1px)';
+                });
+                backItem.addEventListener('mouseleave', () => {
+                    backItem.style.background = 'rgba(0, 122, 255, 0.08)';
+                    backItem.style.transform = 'translateY(0)';
+                });
+                list.appendChild(backItem);
+            }
+            
             files.forEach(file => {
+                const isDir = file.endsWith('/');
+                
+                // Skip listing parent directory listings if they come back from adb shell ls
+                if (file === './' || file === '../') return;
+                
                 const item = document.createElement('div');
-                item.style.cssText = 'padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;';
-                item.innerHTML = `<span>${file.endsWith('/') ? '📁' : '📄'}</span><span>${file}</span>`;
+                const cleanName = isDir ? file.slice(0, -1) : file;
+                const fullPath = currentDirectoryPath + file;
+                const escapedPath = fullPath.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const escapedCleanName = cleanName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                
+                item.className = 'file-item';
+                item.style.cssText = 'padding: 10px 16px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; font-size: 0.92rem; display: flex; align-items: center; justify-content: space-between; gap: 15px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);';
+                
+                // Left side info (clickable for directories)
+                const leftSide = document.createElement('div');
+                leftSide.style.cssText = 'display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; min-width: 0;';
+                if (isDir) {
+                    leftSide.style.cursor = 'pointer';
+                    leftSide.onclick = () => {
+                        triggerNativeCall(`list_files|${fullPath}`);
+                    };
+                }
+                
+                leftSide.innerHTML = `
+                    <span style="font-size: 1.25rem; flex-shrink: 0;">${isDir ? '📁' : '📄'}</span>
+                    <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff;">${cleanName}</span>
+                `;
+                item.appendChild(leftSide);
+                
+                // Right side action buttons
+                const actions = document.createElement('div');
+                actions.style.cssText = 'display: flex; gap: 8px; flex-shrink: 0; align-items: center;';
+                
+                // Download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'action-icon-btn';
+                downloadBtn.innerHTML = '💾';
+                downloadBtn.title = isDir ? 'Download Folder' : 'Download File';
+                downloadBtn.style.cssText = 'width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.2s;';
+                downloadBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    triggerNativeCall(`download_file|${escapedPath}`);
+                };
+                downloadBtn.addEventListener('mouseenter', () => {
+                    downloadBtn.style.background = 'rgba(0,122,255,0.15)';
+                    downloadBtn.style.borderColor = 'rgba(0,122,255,0.3)';
+                    downloadBtn.style.transform = 'scale(1.08)';
+                });
+                downloadBtn.addEventListener('mouseleave', () => {
+                    downloadBtn.style.background = 'rgba(255,255,255,0.04)';
+                    downloadBtn.style.borderColor = 'rgba(255,255,255,0.08)';
+                    downloadBtn.style.transform = 'scale(1.0)';
+                });
+                actions.appendChild(downloadBtn);
+                
+                // Delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'action-icon-btn';
+                deleteBtn.innerHTML = '🗑️';
+                deleteBtn.title = 'Delete';
+                deleteBtn.style.cssText = 'width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.2s;';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Are you sure you want to delete "${escapedCleanName}"?`)) {
+                        triggerNativeCall(`delete_file|${escapedPath}`);
+                    }
+                };
+                deleteBtn.addEventListener('mouseenter', () => {
+                    deleteBtn.style.background = 'rgba(255,59,48,0.15)';
+                    deleteBtn.style.borderColor = 'rgba(255,59,48,0.3)';
+                    deleteBtn.style.transform = 'scale(1.08)';
+                });
+                deleteBtn.addEventListener('mouseleave', () => {
+                    deleteBtn.style.background = 'rgba(255,255,255,0.04)';
+                    deleteBtn.style.borderColor = 'rgba(255,255,255,0.08)';
+                    deleteBtn.style.transform = 'scale(1.0)';
+                });
+                actions.appendChild(deleteBtn);
+                
+                item.appendChild(actions);
+                
+                // Row hover micro-animations
+                if (isDir) {
+                    item.addEventListener('mouseenter', () => {
+                        item.style.background = 'rgba(255,255,255,0.08)';
+                        item.style.borderColor = 'rgba(255,255,255,0.15)';
+                    });
+                    item.addEventListener('mouseleave', () => {
+                        item.style.background = 'rgba(255,255,255,0.04)';
+                        item.style.borderColor = 'var(--glass-border)';
+                    });
+                }
+                
                 list.appendChild(item);
             });
         }
+
+        // Diagnostics Callbacks
+        function refreshDiagnostics() {
+            document.getElementById('diag-server-status').innerText = 'Scanning...';
+            document.getElementById('diag-server-status').style.color = 'var(--warning)';
+            triggerNativeCall('get_diagnostics');
+        }
+
+        window.updateDiagnostics = function(data) {
+            document.getElementById('diag-server-status').innerText = data.serverRunning ? '🟢 Running' : '🔴 Stopped/Failed';
+            document.getElementById('diag-server-status').style.color = data.serverRunning ? 'var(--success)' : '#ff3b30';
+            
+            document.getElementById('diag-sandbox-status').innerText = data.isSandboxed ? 'Yes (Strict App Sandbox)' : 'No (Local Developer)';
+            document.getElementById('diag-sandbox-status').style.color = data.isSandboxed ? 'var(--accent-secondary)' : 'var(--warning)';
+            
+            document.getElementById('diag-adb-path').innerText = data.adbPath;
+            
+            const checkedPathsPre = document.getElementById('diag-checked-paths');
+            checkedPathsPre.innerText = data.checkedPaths ? data.checkedPaths.map(p => `• ${p}`).join('\n') : '(None checked)';
+            
+            const rawOutputPre = document.getElementById('diag-raw-output');
+            rawOutputPre.innerText = data.rawDevicesOutput || '(No stdout returned)';
+            if(data.scanError && data.scanError !== 'None') {
+                rawOutputPre.style.color = '#ff3b30';
+            } else {
+                rawOutputPre.style.color = 'var(--accent-secondary)';
+            }
+        };
 
         // Bridge to Native SwiftUI
         function triggerNativeCall(actionId) {
